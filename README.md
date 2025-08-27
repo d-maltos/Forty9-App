@@ -1,6 +1,6 @@
 # Forty9 🏔️
 
-A hyperlocal anonymous community platform exclusively for Alaska residents, similar to TeamBlind but focused on Alaskan experiences and minimal content moderation.
+A hyperlocal anonymous community platform exclusively for Alaska residents.
 
 ## Features
 
