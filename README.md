@@ -150,7 +150,6 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Acknowledgments
 
-- Inspired by TeamBlind's anonymous professional community model
 - Built for the unique needs of Alaska's dispersed but connected communities
 - Designed to handle Alaska's unique challenges: distance, weather, and industry-specific needs
 
