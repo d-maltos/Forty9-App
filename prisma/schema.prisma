@@ -1,0 +1,148 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id              String   @id @default(cuid())
+  anonymousId     String   @unique // Random anonymous identifier
+  phoneNumber     String   @unique // Phone number for verification
+  alaskaZipCode   String?  // Optional Alaska zip code
+  isVerified      Boolean  @default(false)
+  verificationCode String? // SMS verification code
+  verificationExpires DateTime? // When verification code expires
+  createdAt       DateTime @default(now())
+  lastActiveAt    DateTime @default(now())
+  
+  // Anonymous profile
+  displayName     String?  // Optional anonymous display name
+  karma           Int      @default(0)
+  
+  // Relationships
+  posts           Post[]
+  comments        Comment[]
+  votes           Vote[]
+  reports         Report[]
+  
+  @@map("users")
+}
+
+model Community {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  displayName String
+  description String
+  type        String   // CITY, INDUSTRY, INTEREST, GENERAL
+  location    String?  // For city-specific communities
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  
+  // Relationships
+  posts       Post[]
+  
+  @@map("communities")
+}
+
+model Post {
+  id          String   @id @default(cuid())
+  title       String
+  content     String
+  isAnonymous Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Engagement
+  upvotes     Int      @default(0)
+  downvotes   Int      @default(0)
+  commentCount Int     @default(0)
+  
+  // Moderation
+  isReported  Boolean  @default(false)
+  isHidden    Boolean  @default(false)
+  
+  // Relationships
+  authorId    String
+  author      User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  communityId String
+  community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  comments    Comment[]
+  votes       Vote[]
+  reports     Report[]
+  
+  @@map("posts")
+}
+
+model Comment {
+  id          String   @id @default(cuid())
+  content     String
+  isAnonymous Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Engagement
+  upvotes     Int      @default(0)
+  downvotes   Int      @default(0)
+  
+  // Threading
+  parentId    String?
+  parent      Comment? @relation("CommentReplies", fields: [parentId], references: [id])
+  replies     Comment[] @relation("CommentReplies")
+  
+  // Moderation
+  isReported  Boolean  @default(false)
+  isHidden    Boolean  @default(false)
+  
+  // Relationships
+  authorId    String
+  author      User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  postId      String
+  post        Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  votes       Vote[]
+  reports     Report[]
+  
+  @@map("comments")
+}
+
+model Vote {
+  id        String   @id @default(cuid())
+  type      String   // UP or DOWN
+  createdAt DateTime @default(now())
+  
+  // Relationships
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  postId    String?
+  post      Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  commentId String?
+  comment   Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  
+  // Ensure one vote per user per item
+  @@unique([userId, postId])
+  @@unique([userId, commentId])
+  @@map("votes")
+}
+
+model Report {
+  id        String   @id @default(cuid())
+  reason    String   // SPAM, HARASSMENT, INAPPROPRIATE_CONTENT, MISINFORMATION, PERSONAL_INFO, OTHER
+  details   String?
+  createdAt DateTime @default(now())
+  status    String   @default("PENDING") // PENDING, REVIEWED, RESOLVED, DISMISSED
+  
+  // Relationships
+  reporterId String
+  reporter   User     @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+  postId     String?
+  post       Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  commentId  String?
+  comment    Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  
+  @@map("reports")
+}
